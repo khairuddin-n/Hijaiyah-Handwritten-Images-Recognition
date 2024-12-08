@@ -13,7 +13,7 @@ class DataGenerator:
         val_test_datagen = ImageDataGenerator()
 
         train_generator = self._create_generator(train_datagen, train_df, shuffle=True, seed=shuffle_seed)
-        validation_generator = self._create_generator(val_test_datagen, val_df, shuffle=True, seed=shuffle_seed)
+        validation_generator = self._create_generator(val_test_datagen, val_df, shuffle=False, seed=shuffle_seed)
         test_generator = self._create_generator(val_test_datagen, test_df, shuffle=False)
 
         return train_generator, validation_generator, test_generator

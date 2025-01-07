@@ -26,8 +26,8 @@ if __name__ == "__main__":
     # system.train_single_configuration('he_normal', 'relu')
     # system.train_single_configuration('he_normal', 'leaky_relu')
     # ...
-
-    # Load all results and analyze
+    
+    # Load results
     all_results = ModelTrainingPipeline.load_results()
 
     # Plot individual loss and accuracy for all configurations
@@ -41,13 +41,8 @@ if __name__ == "__main__":
     print("Performance Comparison:")
     print(performance_table)
 
-    # Save performance table to an Excel file
-    # performance_table_file = "performance_comparison.xlsx"
-    # performance_table.to_excel(performance_table_file, index=False)
-    # print(f"Performance table saved to {performance_table_file}")
+    # Visualize confusion matrix
+    Visualizer.plot_confusion_matrix(model, system.test_generator)
 
-    # Visualisasi confusion matrix
-    Visualizer.plot_confusion_matrix(
-        model, 
-        system.test_generator
-    )
+    # Analyze misclassifications
+    Visualizer.analyze_misclassifications(model, system.test_generator)

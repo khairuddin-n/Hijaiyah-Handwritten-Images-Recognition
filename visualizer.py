@@ -68,97 +68,98 @@ class Visualizer:
     def compare_performance(results):
         df = pd.DataFrame(results)
         return df.sort_values('accuracy', ascending=False)
-        
+
     @staticmethod
     def plot_confusion_matrix(model, test_generator, save_dir="confusion_matrix"):
         """
         Calculate and plot confusion matrix for top and bottom 20 classes based on accuracy,
         with additional context about class frequency.
-        
+
         Parameters:
         - model: Trained Keras model
         - test_generator: Test data generator
         - save_dir: Directory to save confusion matrix plots
         """
-        # Ensure save directory exists
         os.makedirs(save_dir, exist_ok=True)
 
-        # Predict on test data
         predictions = model.predict(test_generator)
         y_true = test_generator.classes
         y_pred = np.argmax(predictions, axis=1)
 
-        # Get class names
         class_names = list(test_generator.class_indices.keys())
-
-        # Calculate confusion matrix
         cm = confusion_matrix(y_true, y_pred)
-
-        # Calculate accuracy per class
         class_accuracies = np.diagonal(cm) / np.sum(cm, axis=1)
-        
-        # Calculate frequency per class (number of samples for each class)
         class_frequencies = np.bincount(y_true)
 
-        # Combine accuracy and frequency into a single structure for sorting
-        class_info = []
-        for i in range(len(class_names)):
-            class_info.append({
+        class_info = [
+            {
                 'class_name': class_names[i],
                 'accuracy': class_accuracies[i],
                 'frequency': class_frequencies[i]
-            })
+            }
+            for i in range(len(class_names))
+        ]
 
-        # Sort classes by accuracy (top 20 and bottom 20)
-        class_info_sorted_by_accuracy = sorted(class_info, key=lambda x: x['accuracy'], reverse=True)
-        top_class_info = class_info_sorted_by_accuracy[:20]
-        bottom_class_info = class_info_sorted_by_accuracy[-20:]
+        class_info_sorted = sorted(class_info, key=lambda x: x['accuracy'], reverse=True)
+        top_class_info = class_info_sorted[:20]
+        bottom_class_info = class_info_sorted[-20:]
 
-        # Prepare indices for top and bottom 20 classes
-        top_class_indices = [class_names.index(item['class_name']) for item in top_class_info]
-        bottom_class_indices = [class_names.index(item['class_name']) for item in bottom_class_info]
-
-        # Fungsi untuk plot confusion matrix
         def plot_cm(cm_subset, class_names_subset, title, filename):
             cm_normalized = cm_subset.astype('float') / cm_subset.sum(axis=1)[:, np.newaxis]
 
             plt.figure(figsize=(15, 12))
-            sns.heatmap(cm_normalized, 
-                        annot=True, 
-                        fmt='.2%', 
-                        cmap='YlGnBu', 
-                        xticklabels=class_names_subset,
-                        yticklabels=class_names_subset)
-            
+            sns.heatmap(cm_normalized, annot=True, fmt='.2%', cmap='YlGnBu',
+                        xticklabels=class_names_subset, yticklabels=class_names_subset)
             plt.title(title)
             plt.xlabel('Predicted Label')
             plt.ylabel('True Label')
             plt.xticks(rotation=90)
             plt.yticks(rotation=0)
-            
             save_path = os.path.join(save_dir, filename)
             plt.tight_layout()
             plt.savefig(save_path)
             plt.close()
 
-            print(f"Confusion matrix plot saved to {save_path}")
+        top_cm = cm[[class_names.index(item['class_name']) for item in top_class_info]]
+        top_cm = top_cm[:, [class_names.index(item['class_name']) for item in top_class_info]]
+        plot_cm(top_cm, [item['class_name'] for item in top_class_info],
+                'Confusion Matrix (Top 20 Classes)', 'top_20_classes.png')
 
-        # Plot top 20 classes based on accuracy, showing accuracy and frequency
-        top_cm = cm[top_class_indices][:, top_class_indices]
-        top_class_names = [item['class_name'] for item in top_class_info]
-        print("Top 20 classes based on accuracy:")
-        for item in top_class_info:
-            print(f"{item['class_name']} - Accuracy: {item['accuracy']:.2f}, Frequency: {item['frequency']}")
-        plot_cm(top_cm, top_class_names, 
-                'Confusion Matrix (Top 20 Classes Based on Accuracy)', 
-                'top_20_accuracy_confusion_matrix.png')
+        bottom_cm = cm[[class_names.index(item['class_name']) for item in bottom_class_info]]
+        bottom_cm = bottom_cm[:, [class_names.index(item['class_name']) for item in bottom_class_info]]
+        plot_cm(bottom_cm, [item['class_name'] for item in bottom_class_info],
+                'Confusion Matrix (Bottom 20 Classes)', 'bottom_20_classes.png')
 
-        # Plot bottom 20 classes based on accuracy, showing accuracy and frequency
-        bottom_cm = cm[bottom_class_indices][:, bottom_class_indices]
-        bottom_class_names = [item['class_name'] for item in bottom_class_info]
-        print("Bottom 20 classes based on accuracy:")
-        for item in bottom_class_info:
-            print(f"{item['class_name']} - Accuracy: {item['accuracy']:.2f}, Frequency: {item['frequency']}")
-        plot_cm(bottom_cm, bottom_class_names, 
-                'Confusion Matrix (Bottom 20 Classes Based on Accuracy)', 
-                'bottom_20_accuracy_confusion_matrix.png')
+    @staticmethod
+    def analyze_misclassifications(model, test_generator, save_path="misclassifications_analysis.xlsx"):
+        """
+        Analyze misclassifications and save details of class-to-class errors.
+
+        Parameters:
+        - model: Trained Keras model
+        - test_generator: Test data generator
+        - save_path: File path to save the misclassifications analysis table
+        """
+        predictions = model.predict(test_generator)
+        y_true = test_generator.classes
+        y_pred = np.argmax(predictions, axis=1)
+
+        class_names = list(test_generator.class_indices.keys())
+        cm = confusion_matrix(y_true, y_pred)
+
+        misclassification_data = [
+            {
+                "True Class": class_names[i],
+                "Predicted Class": class_names[j],
+                "Count": cm[i, j]
+            }
+            for i in range(len(class_names))
+            for j in range(len(class_names))
+            if i != j and cm[i, j] > 0
+        ]
+
+        df_misclassifications = pd.DataFrame(misclassification_data)
+        df_misclassifications = df_misclassifications.sort_values(by="Count", ascending=False)
+
+        df_misclassifications.to_excel(save_path, index=False)
+        print(f"Misclassifications analysis saved to {save_path}")

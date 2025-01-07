@@ -1,6 +1,7 @@
 import cv2
 import numpy as np
 from tensorflow.keras.preprocessing.image import ImageDataGenerator
+from config import Config
 
 class DataGenerator:
     def __init__(self, img_height, img_width, batch_size):
@@ -29,12 +30,4 @@ class DataGenerator:
             color_mode='grayscale',
             shuffle=shuffle,
             seed=seed,
-            preprocessing_function=self.preprocess_image)
-
-    def preprocess_image(self, img_path):
-        img = cv2.imread(img_path, cv2.IMREAD_GRAYSCALE)
-        img = cv2.resize(img, (self.img_height, self.img_width))
-        img = cv2.bitwise_not(img)
-        img = img.astype('float32') / 255.0
-        img = np.expand_dims(img, axis=-1)
-        return img
+        )

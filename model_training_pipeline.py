@@ -7,7 +7,7 @@ from model_builder import ModelBuilder
 from model_trainer import ModelTrainer
 from evaluator import Evaluator
 
-class ModularTrainingSystem:
+class ModelTrainingPipeline:
     def __init__(self):
         self.data_loader = DataLoader(Config.DATASET_DIR)
         self.data_generator = DataGenerator(Config.IMG_HEIGHT, Config.IMG_WIDTH, Config.BATCH_SIZE)

@@ -10,7 +10,7 @@ class Config:
     BATCH_SIZE = 64
     IMG_HEIGHT = 32
     IMG_WIDTH = 32
-    EPOCHS = 2
+    EPOCHS = 20
 
     KERNEL_INITIALIZERS = {
         'he_normal': he_normal(),

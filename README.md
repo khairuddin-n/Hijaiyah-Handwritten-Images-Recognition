@@ -21,7 +21,7 @@ This project aims to optimize a Convolutional Neural Network (CNN) by experiment
 ├── evaluator.py                  # Module for evaluating the model (metrics calculation and confusion matrix)
 ├── model_training_pipeline.py    # Pipeline for overall model training and evaluation
 ├── visualizer.py                 # Module for visualizing training and evaluation results
-├── main.py                       # Main script to run training, evaluation, and visualization
+└── main.py                       # Main script to run training, evaluation, and visualization
 ```
 
 ### Requirements  
